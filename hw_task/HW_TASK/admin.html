@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        td{
+            text-align: center;
+        }
+        thead td{
+            font-weight: bold;
+        }
+        button{
+            margin-left: 5px;
+        }
+    </style>
+    <link rel="stylesheet" href="bootstrap/css/bootstrap.css" />
+    <script src="bootstrap/js/jquery-2.1.1.js" type="text/javascript" charset="UTF-8"></script>
+    <script src="bootstrap/js/bootstrap.js" type="text/javascript" charset="UTF-8"></script>
+    <script src="js/vue.global.js"></script>
+
+</head>
+<body>
+
+<div class="container" style="margin-top: 50px;" id="app">
+    <div class="row">
+        <div class="col-md-3">
+            <div class="panel panel-primary">
+                <!-- Default panel contents -->
+                <div class="panel-heading" style="height: 40px;">华为门店维修接待管理系统</div>
+              
+                <!-- List group -->
+                <div class="list-group">
+                  <a @click="show_manager(1)" class="list-group-item">客户接待</a>
+                  <a @click="show_manager(2)" class="list-group-item">维修管理</a>
+                  <a @click="show_manager(3)" class="list-group-item">配件查询</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-9">
+            <!-- 客户业务办理start -->
+            <div v-if="cus_view" class="panel panel-primary">
+                <!-- Default panel contents -->
+                <div class="panel-heading" style="height: 40px;">客户办理业务信息列表</div>
+                <div class="panel-body">
+                    <p>
+                        <form class="form-inline" action="">
+                            <div class="form-group">
+                                &nbsp;<label >客户名</label>&nbsp;
+                                <input type="text" style="width: 100px;" class="form-control" id="cus_name" placeholder="请输入姓名">
+                            </div>
+                            <div class="form-group">
+                                &nbsp;<label >客户电话</label>&nbsp;
+                                <input type="number" class="form-control" id="cus_phone" placeholder="请输入电话号码">
+                            </div>
+                            <div class="form-group">
+                                &nbsp;<label >维修项目</label>&nbsp;
+                                <select class="form-control" id="task_item">
+                                    <option>电池</option>
+                                    <option>外屏</option>
+                                    <option>内屏</option>
+                                    <option>摄像头</option>
+                                    <option>主板</option>
+                                </select>
+                            </div>
+                            &nbsp;<button type="button" @click="save_task()" class="btn btn-danger">接待客户</button>
+                        </form>
+                    </p>
+                </div>
+              
+                <!-- Table -->
+                <table class="table table-bordered table-striped table-hover">
+                  <thead>
+                    <tr>
+                        <td>任务编号</td>
+                        <td>姓名</td>
+                        <td>联系电话</td>
+                        <td>业务项目</td>
+                        <td>状态</td>
+                        <td>操作</td>
+                    </tr>
+                  </thead>
+                  <tbody class="ttr" align="center">
+                    <tr v-for="task in task_list">
+                        <td>{{task.task_no}}</td>
+                        <td>{{task.cus_name}}</td>
+                        <td>{{task.cus_phone}}</td>
+                        <td>{{task.task_item}}</td>
+                        <td>{{task.task_status==0?"录单完成":task.task_status==1?"维修中":"取机"}}</td>
+                        <td>
+                            <button type="button" class="btn btn-info">查看</button>&nbsp;
+                            <button type="button" class="btn btn-danger" @click="delete_task(task.task_no)">删除</button>
+                        </td>
+                    </tr>
+                  </tbody>
+                </table>
+            </div>
+            <!-- 客户办理业务end -->
+
+            <!-- 维修业务start -->
+            <div v-if="service_view" class="panel panel-primary">
+                <!-- Default panel contents -->
+                <div class="panel-heading" style="height: 40px;">维修信息列表</div>
+
+                <!-- Table -->
+                <table class="table table-bordered table-striped table-hover">
+                  <thead>
+                    <tr>
+                        <td>任务编号</td>
+                        <td>姓名</td>
+                        <td>联系电话</td>
+                        <td>业务项目</td>
+                        <td>状态</td>
+                        <td>操作</td>
+                    </tr>
+                  </thead>
+                  <tbody class="ttr" align="center">
+                    <tr v-for="service in service_list">
+                        <td>{{service.task_no}}</td>
+                        <td>{{service.cus_name}}</td>
+                        <td>{{service.cus_phone}}</td>
+                        <td>{{service.task_item}}</td>
+                        <td>{{service.task_status==0?"录单完成":service.task_status==1?"维修中":"取机"}}</td>
+                        <td>
+                            <button v-if="service.task_status==0" @click="change_status(service.task_no,'',1)" type="button" 
+                            class="btn btn-info">开始维修</button>
+                            <button v-if="service.task_status==1" @click="change_status(service.task_no,service.task_item,2)" type="button" 
+                            class="btn btn-primary">完成维修</button>
+                        </td>
+                    </tr>
+                  </tbody>
+                </table>
+            </div>
+            <!-- 维修业务end -->
+
+            <!-- 库存start -->
+            <div v-if="fit_view" class="panel panel-primary">
+                <!-- Default panel contents -->
+                <div class="panel-heading" style="height: 40px;">库存配件信息列表</div>
+
+                <!-- Table -->
+                <table class="table table-bordered table-striped table-hover">
+                  <thead>
+                    <tr>
+                        <td>配件编号</td>
+                        <td>配件名称</td>
+                        <td>库存数量</td>
+                        <td>产地</td>
+                    </tr>
+                  </thead>
+                  <tbody class="ttr" align="center">
+                    <tr v-for="fit in fit_list">
+                        <td>{{fit.fit_no}}</td>
+                        <td>{{fit.fit_name}}</td>
+                        <td>{{fit.fit_qty}}</td>
+                        <td>{{fit.fit_city}}</td>
+                    </tr>
+                  </tbody>
+                </table>
+            </div>
+            <!-- 库存end -->
+
+        </div>
+    </div>
+</div>
+
+<script>
+    const{createApp} = Vue
+    createApp({
+        data(){
+            return{
+                task_list:[],//任务列表
+                service_list:[],//业务列表
+                fit_list:[],//配件列表
+                cus_view:true,//客户面板
+                service_view:false,//维修面板
+                fit_view:false//仓库面板
+            }
+        },
+        mounted(){
+            this.query_all();
+        },
+        methods:{
+            show_manager:function(flag){
+                if(flag == 1){//显示客户面板
+                    this.cus_view = true;
+                    this.service_view = false;
+                    this.fit_view = false;
+                }else if(flag == 2){//显示维修面板
+                    this.cus_view = false;
+                    this.service_view = true;
+                    this.fit_view = false;
+                    this.query_all_service();
+                }else if(flag == 3){//显示仓库面板
+                    this.cus_view = false;
+                    this.service_view = false;
+                    this.fit_view = true;
+                    this.query_all_fit();
+                }
+            },
+            query_all:function(){
+                var that = this;
+                $.post("http://localhost/task?name=query_all",function(data){
+                    that.task_list=data;
+                    console.log(that.task_list);
+                });
+            },
+            query_all_service:function(){
+                var that = this;
+                $.post("http://localhost/task?name=query_all",function(data){
+                    that.service_list=data;
+                });
+            },
+            query_all_fit:function(){
+                var that = this;
+                $.post("http://localhost/task?name=query_all_fit",function(data){
+                    that.fit_list = data;
+                });
+            },
+            delete_task:function(task_no){
+                var that = this;
+                if(confirm("确认删除【"+task_no+"】吗?")){
+                    $.post("http://localhost/task?name=delete_task",{"task_no":task_no},function(data){
+                        that.query_all();
+                    });
+                }
+            },
+            change_status:function(task_no,task_item,task_status){
+                var that = this;
+                if(confirm("确认修改【" + task_no + "】吗?")){
+                    $.post("http://localhost/task?name=edit_status",
+                    {"task_no":task_no,
+                    "task_item":task_item,
+                    "task_status":task_status},
+                    function(data){
+                        that.query_all_service();
+                    });
+                }
+            },
+            save_task:function(){
+                var cus_name = $("#cus_name").val();
+                var cus_phone = $("#cus_phone").val();
+                var task_item = $("#task_item").val();
+                var date = new Date();
+                var task_date = date.getFullYear() + "-"
+                    + (date.getMonth() + 1) + "-" + date.getDate()
+                    + " " + date.getHours() + "-" + date.getMinutes();
+                console.log(cus_name);
+                console.log(cus_phone);
+                console.log(task_item);
+                console.log(task_date);
+                var that = this;
+                $.post("http://localhost/task?name=save_task",
+                {"cus_name":cus_name,
+                "cus_phone":cus_phone,
+                "task_item":task_item,
+                "task_date":task_date},
+                function(data){
+                    console.log(data)
+                    that.query_all();
+                    //清空
+                    $("#cus_name").val("");
+                    $("#cus_phone").val("");
+                    $("#task_item").val("");
+                });
+            }
+        },
+    }).mount('#app')
+</script>
+
+</body>
+</html>
